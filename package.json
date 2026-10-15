@@ -7,6 +7,10 @@
     "test": "vitest run",
     "test:pg": "bash scripts/test-pg.sh",
     "typecheck": "tsc --noEmit",
+    "docs:dev": "vitepress dev docs",
+    "docs:llms": "node --import tsx scripts/build-llms.ts",
+    "docs:build": "pnpm docs:llms && vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "db:generate": "drizzle-kit generate",
     "skill:sync": "tsx scripts/sync-skill.ts",
     "kit:stamp": "tsx scripts/stamp-version.ts"
@@ -24,6 +28,7 @@
     "fishery": "^2.4.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
+    "vitepress": "1.6.4",
     "vitest": "^5.0.4"
   },
   "packageManager": "pnpm@11.25.0"

@@ -1,0 +1,23 @@
+# db-test-kit-js
+
+> A runnable reference for fast database-backed tests in TypeScript. Copy the patterns into your repository; do not install it as a dependency.
+
+Canonical operational instructions:
+- https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md
+
+Documentation:
+- /db-test-kit-js/guide/quick-start: run the reference projects
+- /db-test-kit-js/guide/how-it-works: rollback, fixtures, factories and the application seam
+- /db-test-kit-js/guide/choose-a-path: select Drizzle or Prisma and singleton or dependency injection
+- /db-test-kit-js/guide/drizzle: adopt the Drizzle implementation
+- /db-test-kit-js/guide/prisma: adopt the Prisma implementation
+- /db-test-kit-js/guide/updating: update an existing copied implementation
+- /db-test-kit-js/reference/caveats: transaction semantics and escape hatches
+- /db-test-kit-js/reference/safety: database isolation and destructive-operation safeguards
+- /db-test-kit-js/reference/compatibility: tested versions and support boundaries
+- /db-test-kit-js/reference/sources: official documentation, prior art and evidence boundaries
+- /db-test-kit-js/agents/: concise instructions for coding agents
+- /db-test-kit-js/llms-full.txt: complete documentation in one text file
+
+Source code:
+- https://github.com/danielrose7/db-test-kit-js

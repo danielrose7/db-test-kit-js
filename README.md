@@ -25,6 +25,16 @@ pnpm test          # PGlite (in-process Postgres): nothing else to install
 pnpm test:pg       # real Postgres: `docker compose up -d` first; also runs the concurrency tests
 ```
 
+## Read the guide
+
+The documentation site is built from Markdown in `docs/` and deploys as a static GitHub Pages site.
+It includes human-oriented adoption paths plus `/llms.txt`, `/llms-full.txt`, and a concise agent guide.
+
+```bash
+pnpm docs:dev       # local authoring
+pnpm docs:build     # production build, including agent-readable text resources
+```
+
 ## Prisma?
 
 `variants/prisma/` is the same project on Prisma 7 (real Postgres required): same domain, same tests, same
@@ -72,4 +82,5 @@ transaction start, and a failed statement aborts the transaction. Each is pinned
 > Status: the workflow is validated as YAML and every command it runs is exercised locally, but it has not run on GitHub yet. Watch the first push.
 
 `.github/workflows/test.yml` runs two jobs: PGlite (fast, no services) and a real Postgres service
-container (same suite plus the concurrency tests).
+container (same suite plus the concurrency tests). `.github/workflows/pages.yml` builds and deploys
+the documentation after GitHub Pages is configured to use Actions.

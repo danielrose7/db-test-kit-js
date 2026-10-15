@@ -1,0 +1,513 @@
+# db-test-kit-js — complete documentation for language models
+
+Generated from the same Markdown that builds the documentation site. Prefer RECREATE.md when
+performing an adoption or update because it is the canonical operational checklist.
+
+
+---
+
+# Home
+
+## This is deliberately not a package
+
+Database test infrastructure sits directly on the seams of your application: its connection owner,
+migrations, authorization boundary, schema types, and test runner. A generic dependency tends to hide
+the very behavior a test suite should make obvious.
+
+`db-test-kit-js` is a small working system to study and copy. The files marked **COPY** have stable
+behavior. Files marked **ADAPT** name their intended customization points. Domain-specific fixtures,
+factories, and tests are **EXAMPLE** files to replace with your own.
+
+::: tip The promise
+After setup, a test can call real application code, mutate the database freely, and finish with the
+database exactly as it began. Tests that genuinely need committed concurrent transactions opt out
+explicitly and run against disposable Postgres.
+:::
+
+## The model
+
+```text
+committed fixture baseline (loaded once)
+                │
+        BEGIN transaction
+                │
+       real application code
+       ├── membership checks
+       ├── fixture reads
+       └── factory writes
+                │
+        ROLLBACK after test
+```
+
+Start by [running the examples](/guide/quick-start), then [choose the adoption path](/guide/choose-a-path)
+that matches your ORM and application architecture.
+
+---
+
+# Quick start
+
+# Quick start
+
+The repository contains two small multi-tenant applications with the same tests. The default project
+uses Drizzle and starts with PGlite, so it needs no database service. The Prisma project uses disposable
+Postgres.
+
+## Drizzle with zero setup
+
+```bash
+git clone https://github.com/danielrose7/db-test-kit-js.git
+cd db-test-kit-js
+corepack enable
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+```
+
+The suite proves fixture loading, rollback isolation, a tenancy matrix, factories, savepoints,
+transaction failure behavior, and the database seam. The concurrency test is skipped because PGlite's
+single session cannot demonstrate a real race.
+
+## Drizzle against Postgres
+
+```bash
+docker compose up -d
+pnpm test:pg
+```
+
+This runs the same suite plus `test/tasks.concurrency.test.ts` against a throwaway database.
+
+## Prisma 7 against Postgres
+
+```bash
+cd variants/prisma
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+```
+
+The Prisma variant uses its own exact ORM/toolchain pins and lockfile. Its test script generates the
+client, deploys migrations, loads the baseline, and runs the suite.
+
+::: warning Use only a disposable test database
+Committed-mode tests and fixture bootstrap mutate data outside the per-test rollback transaction.
+Never point either project at development, staging, or production. Read [Database safety](/reference/safety)
+before adapting the Postgres scripts.
+:::
+
+## Next
+
+- [See how the transaction, fixtures, and factories fit together](/guide/how-it-works)
+- [Choose an adoption path](/guide/choose-a-path)
+- [Give the canonical checklist to an agent](/agents/)
+
+---
+
+# How it works
+
+# How it works
+
+The kit combines three familiar testing tools and one application seam. None is novel alone; their
+composition is the useful part.
+
+## 1. Rollback isolation
+
+Vitest's `aroundEach` opens an interactive transaction, makes its client current, runs the test, and
+throws a private sentinel error. Throwing matters: a transaction callback that returns normally commits.
+The outer harness recognizes only its own sentinel and lets every other failure reach Vitest.
+
+Production code continues importing the normal application `db`. In singleton-style applications, the
+test setup mocks that one module with a proxy to the current transaction. Access outside a test
+transaction throws unless the file explicitly selected committed mode.
+
+## 2. A committed fixture baseline
+
+Fixtures represent the handful of records almost every test can safely read: two tenants, membership
+edges, users with different authorization states, and a few domain records. They load once before the
+suite, not before each test.
+
+Rows are keyed by labels. IDs are UUIDv5 values derived from the fixture set and label, so relationships
+can be declared without querying:
+
+```ts
+organizationId: idOf(organizationFixtures, "acme")
+```
+
+The label is checked by TypeScript. A misspelling fails typechecking instead of becoming a missing row at
+runtime.
+
+## 3. Factories for variation
+
+Factories create state owned by one test. Persistence happens in Fishery's `onCreate`, leaving `build()`
+pure. Associations are lazy: a task factory can create its organization and project only when the test
+did not provide them.
+
+The rule of thumb is simple:
+
+| Data | Use |
+|---|---|
+| Read by many tests and rarely changed | Fixture |
+| Meaningful only inside one test | Factory |
+| A repeated graph or workflow state | Scenario composed from factories |
+
+## 4. A real authorization boundary
+
+The session lookup is fakeable; the tenant or membership check is not. Tests can say `signInAs(user)` and
+then call the real server function. The database-backed authorization query, domain query, mutation, and
+audit write all happen inside the same rollback transaction.
+
+## 5. An explicit escape hatch
+
+One transaction owns one connection. That is desirable isolation, but it cannot prove behavior that
+requires independent transactions. A committed-mode file opts out, creates its own tenant, and runs only
+against disposable Postgres. This makes the limitation visible rather than silently weakening a race test.
+
+See [Caveats and escape hatches](/reference/caveats) for the executable boundaries.
+
+---
+
+# Choose an adoption path
+
+# Choose an adoption path
+
+Start with two questions: which ORM owns your transaction client, and how does application code obtain
+that client?
+
+| ORM | Application database access | Starting point |
+|---|---|---|
+| Drizzle | One imported singleton | Root project; mock the seam module |
+| Drizzle | Dependency injection | Root project; pass `tx` and skip the module mock |
+| Prisma 7 | One imported singleton | `variants/prisma`; mock the seam module |
+| Prisma 7 | Dependency injection | `variants/prisma`; pass the interactive client |
+
+## Use the Drizzle path when
+
+- production uses Drizzle with Postgres;
+- tests can use `node-postgres`, `postgres-js`, or PGlite for interactive transactions;
+- the test process can run the project's migrations.
+
+[Adopt the Drizzle version →](/guide/drizzle)
+
+## Use the Prisma path when
+
+- the project uses Prisma 7 with Postgres;
+- a real disposable Postgres database is available;
+- the generated client can be produced before tests.
+
+[Adopt the Prisma version →](/guide/prisma)
+
+## Stop before copying when
+
+- the target does not use Postgres;
+- database clients are constructed throughout the application instead of behind one seam;
+- tests cannot open interactive transactions;
+- an existing harness already solves rollback isolation and only fixtures or guard tests are missing.
+
+In the last case, preserve the working harness and add only the missing layers. `RECREATE.md` begins with
+this reconnaissance deliberately.
+
+---
+
+# Adopt the Drizzle version
+
+# Adopt the Drizzle version
+
+The root project is the canonical Drizzle implementation. Do not copy its example domain wholesale.
+Use the classifications in `RECREATE.md`.
+
+## What normally transfers unchanged
+
+- fixture identity and label helpers;
+- fixed fixture clock;
+- global setup shape;
+- rollback sentinel behavior;
+- the test that forbids database access outside a transaction.
+
+## What must match the target
+
+- schema and database module imports;
+- migration runner and migrations directory;
+- session lookup module;
+- seam-guard allow-list;
+- fixture rows and dependency order;
+- factories and authorization tests;
+- test database name, URL, and safety rules.
+
+## Driver boundary
+
+Production may use Neon's HTTP driver while tests use `node-postgres` or PGlite. The requirement is not
+that production and tests share a transport; it is that application queries share the same Drizzle schema
+and the test driver supports an interactive transaction held open across a test.
+
+## Canonical procedure
+
+Read the complete [`RECREATE.md`](https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md)
+before editing a target repository. It includes reconnaissance, the file map, verification failures to
+induce deliberately, and pitfalls discovered during cold adoption trials.
+
+---
+
+# Adopt the Prisma version
+
+# Adopt the Prisma version
+
+`variants/prisma/` is a complete Prisma 7 project, not a sketch layered over the Drizzle source. Start
+there because the ORM differences affect the harness, fixture types, loader, bootstrap, generated code,
+and database requirements.
+
+## Important differences
+
+- Prisma requires real Postgres in this reference; there is no PGlite default.
+- The interactive transaction uses explicit `timeout` and `maxWait` values.
+- Fixture sets name Prisma delegates and use scalar foreign-key fields.
+- Bootstrap runs `prisma generate` and `prisma migrate deploy`.
+- Fixture loading uses a plain, unextended client so application extensions cannot reject cleanup.
+- Prisma `@default(now())` behavior differs from SQL `DEFAULT now()`; both behaviors are pinned by tests.
+
+## Version policy
+
+The Prisma CLI, client, and adapter are pinned to exactly the same current stable Prisma 7 release. The
+variant does not claim Prisma 8 compatibility: that major version changes core APIs and deserves a
+separate implementation and test pass, not a widened version range.
+
+## Dependency-injected applications
+
+If application functions already accept a Prisma client, skip `vi.mock`. Pass the current transaction
+client to the real functions and keep authorization dependencies real except for the session identity.
+
+Read the [variant README](https://github.com/danielrose7/db-test-kit-js/blob/main/variants/prisma/README.md)
+and then follow the Prisma section of `RECREATE.md`.
+
+---
+
+# Update an existing copy
+
+# Update an existing copy
+
+Copied infrastructure needs a visible provenance trail. Every managed COPY or ADAPT file begins with a
+header such as:
+
+```ts
+// db-test-kit-js v0.2 · ADAPT — copied; adapt only where RECREATE.md says
+```
+
+## The update loop
+
+1. Read the copied files' headers. A missing header means the copy predates v0.2.
+2. Read every newer entry in `CHANGELOG.md`.
+3. Replace changed COPY files from the reference.
+4. Apply changed ADAPT files as a three-way comparison, preserving the target's imports and seams.
+5. Never overwrite EXAMPLE fixtures, factories, or domain tests.
+6. Stamp touched files with the new version. A headerless v0.1→v0.2 update stamps every managed file.
+7. Repeat the complete verification checklist, including deliberate failure checks.
+
+The update procedure was tested on a reconstructed v0.1 copy. That trial found the header migration and
+typecheck-command ambiguities now documented in the canonical instructions.
+
+For operational details, use [`RECREATE.md`](https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md),
+not this overview.
+
+---
+
+# Caveats and escape hatches
+
+# Caveats and escape hatches
+
+The harness makes transaction behavior fast and convenient; it does not repeal transaction semantics.
+Each boundary below is pinned by a test in both variants where applicable.
+
+## Expected failures abort transactions
+
+Postgres marks a transaction aborted after a failed statement. Wrap an error you intend to catch in an
+application-level nested transaction/savepoint. Be especially careful when application code catches its
+own insert error and then tries another query.
+
+## One connection is not concurrency
+
+Queries issued through the wrapping transaction share one connection. A `Promise.all` can appear to pass
+while operations actually serialize. Move race-sensitive assertions into a committed-mode file and run
+them against real Postgres with data scoped to a tenant created by that test.
+
+## Database time belongs to the transaction
+
+Postgres `now()` is the transaction start time. Rows inserted later in the same test may receive identical
+timestamps. Set explicit timestamps when order matters. Prisma's client-side `@default(now())` behaves
+differently; raw SQL time still follows Postgres.
+
+## Baselines are visible globally
+
+Cross-tenant jobs and sweep queries see committed fixtures. Keep fixture dates in the past and workflow
+states terminal. Scope assertions to the test tenant instead of assuming the whole database is empty.
+
+## Committed mode leaves data behind
+
+The real-Postgres database is disposable per run. A committed-mode test must create a unique tenant and
+must never depend on another committed test's cleanup.
+
+---
+
+# Database safety
+
+# Database safety
+
+The default PGlite suite stores its database in the test process. The Postgres and Prisma paths can run
+migrations, delete fixture tables, and commit data. Treat their connection strings as destructive input.
+
+## Required posture
+
+- Use a dedicated disposable database created for the test run.
+- Give its role access only to that database.
+- Name the database unmistakably as a test database.
+- Keep production and staging secrets unavailable to test jobs.
+- Print the selected host and database before destructive setup.
+- Fail closed when the environment does not explicitly identify itself as testing.
+- Never “make the tests pass” by weakening a connection-string guard.
+
+## CI isolation
+
+The included workflow creates a Postgres service container visible only to the job. That is the preferred
+shape: migrations and committed-mode tests cannot reach application data because no application database
+credential exists in the job.
+
+## Target-repository checklist
+
+Before loading fixtures, confirm all of these:
+
+- `NODE_ENV` is `test`;
+- the URL is not a production, preview, staging, or development URL;
+- the database is disposable;
+- migrations point at the same URL the tests use;
+- cleanup and committed-mode tests cannot run against a shared database;
+- the fixture role cannot connect to production.
+
+The reference is adding executable URL guards before its first public release. Until those land, the
+organizational isolation above is mandatory rather than optional.
+
+---
+
+# Compatibility
+
+# Compatibility
+
+This project follows current stable releases rather than maximizing backward compatibility. “Tested”
+means exercised by the reference projects, not merely allowed by a version range.
+
+| Component | Tested reference | Policy |
+|---|---|---|
+| Node.js | 24 | Current stable/LTS line used by CI |
+| pnpm | 11.25.0 | Exact package-manager declaration |
+| TypeScript | 7.0.2 | Current stable used by both variants |
+| Vitest | 5.0.4 | Current stable; `aroundEach` requires at least 4.1 |
+| Drizzle ORM | 0.45.4 | Current stable at the last verification |
+| PGlite | 0.5.10 | Zero-setup Drizzle backend |
+| Prisma | 7.10.0 | Exact CLI/client/adapter pins in the variant |
+| Postgres | 16 | Local scripts and CI service image |
+
+Run `pnpm outdated` before a release. ORM, test-runner, and database upgrades require the full caveat
+suite and deliberate-failure checks; they should not be treated as lockfile-only maintenance.
+
+## Explicit non-goals
+
+- MySQL, SQLite, MongoDB, and non-Postgres Drizzle dialects;
+- Prisma 8 until a dedicated variant is implemented and verified;
+- transparent support for arbitrary database client construction;
+- preserving support for old runners at the expense of the primary implementation.
+
+Older Vitest and Jest projects can use the hook-pair pattern in `RECREATE.md`, but the reference itself
+tracks the current stable Vitest design.
+
+---
+
+# Sources and prior art
+
+# Sources and prior art
+
+Last reviewed: **October 15, 2026**. Version-sensitive behavior is also pinned by executable tests;
+documentation links provide context but do not replace those tests.
+
+## Primary documentation
+
+- [Vitest Test API](https://vitest.dev/api/test) — `aroundEach`, scoped fixtures, concurrency and
+  runner behavior.
+- [VitePress deployment guide](https://vitepress.dev/guide/deploy) — static GitHub Pages build and
+  repository base paths.
+- [Drizzle with PGlite](https://orm.drizzle.team/docs/connect-pglite) — the zero-service database
+  used by the default reference suite.
+- [Drizzle Seed](https://orm.drizzle.team/docs/seed-overview) — deterministic generated data. It is a
+  neighboring tool, not the same thing as a small label-addressed committed fixture baseline.
+- [Prisma 7 integration testing](https://www.prisma.io/docs/orm/v7/prisma-client/testing/integration-testing)
+  — official real-database setup and suite-level seed/cleanup approach.
+- [Prisma 7 transactions](https://www.prisma.io/docs/orm/v7/prisma-client/queries/transactions) —
+  interactive transaction limits and options.
+- [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html) —
+  database semantics beneath both ORM implementations.
+
+## Framework precedents
+
+- [Rails `ActiveRecord::FixtureSet`](https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html)
+  — label-based fixtures, stable IDs, associations, shared defaults and transactional tests.
+- [Django transactions in tests](https://docs.djangoproject.com/en/stable/topics/testing/tools/#django.test.TestCase)
+  — isolation through transactions and rollback.
+- [Laravel database testing](https://laravel.com/docs/database-testing) — factories, seeders and
+  database refresh patterns.
+- [Fishery](https://github.com/thoughtbot/fishery) — factory_bot-inspired TypeScript factories.
+
+## Closest JavaScript prior art
+
+- [`jest-prisma`](https://github.com/Quramy/jest-prisma) — transaction-per-test and Prisma client seam.
+- [`vitest-environment-prisma-postgres`](https://github.com/codepunkt/vitest-environment-prisma-postgres)
+  — maintained work extending the same family of Prisma/Vitest transaction patterns.
+
+## Evidence boundary
+
+The project is a TypeScript port and composition of established testing practices, not a claim to have
+invented transactional tests, fixtures, or factories. Its original contribution is the worked combination:
+two current ORM examples, typed label references, a deliberate application database seam, real tenancy
+checks, executable caveat tests, committed-mode concurrency, and agent-readable adoption/update guidance.
+
+Performance claims should be framed qualitatively unless accompanied by a reproducible project-specific
+measurement. Transaction rollback avoids schema-wide cleanup work, so the advantage generally becomes more
+meaningful as a schema and suite grow; exact ratios depend on the database, schema, hardware and workload.
+
+---
+
+# Agent guide
+
+# Agent guide
+
+The repository is designed to be legible to coding agents without requiring the rendered site.
+
+## Adopt the pattern
+
+Give an agent this prompt:
+
+```text
+Read RECREATE.md in db-test-kit-js completely. Recreate the applicable database-testing pattern in
+this repository. First report the existing database seam, migration path, ORM, transaction support,
+authorization boundary, test runner, and any existing harness/factories. Preserve working pieces and
+add only what is missing. Run every applicable Step 5 check, including the deliberate failing-test and
+seam-guard failure checks, and report exactly what ran.
+```
+
+## Update a copied implementation
+
+```text
+Read the "Updating an existing copy" section of RECREATE.md and every CHANGELOG entry newer than the
+version headers in this repository. Preserve all target-specific ADAPT changes and every EXAMPLE file.
+Apply only the reference delta, update the managed headers, and run the complete verification checklist.
+```
+
+## Machine-readable entry points
+
+- [`/llms.txt`](/llms.txt) is the short index.
+- [`/llms-full.txt`](/llms-full.txt) concatenates the documentation into one text resource.
+- [`RECREATE.md`](https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md) is canonical for actions.
+- `skill/db-test-kit/SKILL.md` mirrors `RECREATE.md` for Agent Skills-compatible tools.
+
+## Rules agents should not infer away
+
+- Do not publish or install the kit as a package.
+- Do not mock the authorization decision.
+- Do not access the application singleton outside the current transaction.
+- Do not run destructive setup against a non-disposable database.
+- Do not use a rollback test to claim concurrent behavior was tested.
+- Do not overwrite domain-specific fixtures and factories during an update.
