@@ -3,6 +3,9 @@
 The kit combines three familiar testing tools and one application seam. None is novel alone; their
 composition is the useful part.
 
+For the longer history—including the Rails APIs that directly inspired the fixture model—see
+[Design lineage](/reference/lineage/).
+
 ## 1. Rollback isolation
 
 Vitest's `aroundEach` opens an interactive transaction, makes its client current, runs the test, and

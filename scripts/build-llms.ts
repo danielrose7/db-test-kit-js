@@ -10,10 +10,16 @@ const pages = [
   ["Adopt the Drizzle version", "docs/guide/drizzle.md"],
   ["Adopt the Prisma version", "docs/guide/prisma.md"],
   ["Update an existing copy", "docs/guide/updating.md"],
+  ["Fixtures", "docs/reference/fixtures.md"],
+  ["Factories", "docs/reference/factories.md"],
   ["Caveats and escape hatches", "docs/reference/caveats.md"],
   ["Database safety", "docs/reference/safety.md"],
   ["Compatibility", "docs/reference/compatibility.md"],
   ["Sources and prior art", "docs/reference/sources.md"],
+  ["Design lineage", "docs/reference/lineage/index.md"],
+  ["Rails testing ecosystem", "docs/reference/lineage/rails.md"],
+  ["Django and Laravel precedents", "docs/reference/lineage/frameworks.md"],
+  ["TypeScript prior art", "docs/reference/lineage/typescript.md"],
   ["Agent guide", "docs/agents/index.md"],
 ] as const;
 

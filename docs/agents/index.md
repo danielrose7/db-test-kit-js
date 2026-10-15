@@ -2,7 +2,12 @@
 
 The repository is designed to be legible to coding agents without requiring the rendered site.
 
-## Adopt the pattern
+## Copy-ready prompts
+
+Every prompt on this site is intended to work as a single copy-and-paste block. Paths and commands are
+included in the prompt itself; surrounding prose is context, not a hidden instruction.
+
+### Adopt the pattern
 
 Give an agent this prompt:
 
@@ -14,12 +19,25 @@ add only what is missing. Run every applicable Step 5 check, including the delib
 seam-guard failure checks, and report exactly what ran.
 ```
 
-## Update a copied implementation
+### Update a copied implementation
 
 ```text
 Read the "Updating an existing copy" section of RECREATE.md and every CHANGELOG entry newer than the
 version headers in this repository. Preserve all target-specific ADAPT changes and every EXAMPLE file.
 Apply only the reference delta, update the managed headers, and run the complete verification checklist.
+Before editing, summarize the files you expect to change. After editing, list every changed file, every
+check you ran, and any check you could not run. Do not publish a package or change production data.
+```
+
+### Ask an agent to explain the lineage
+
+```text
+Read docs/reference/lineage/index.md, docs/reference/lineage/rails.md,
+docs/reference/lineage/frameworks.md, and docs/reference/lineage/typescript.md in db-test-kit-js.
+Explain which parts of the kit are direct adaptations of established framework practices, which are
+parallel precedents, and which are kit-specific TypeScript integration work. Cite the primary source links
+from those files. Do not describe db-test-kit-js as the inventor of transactional tests, fixtures, or
+factories, and do not make numerical performance claims without a reproducible benchmark.
 ```
 
 ## Machine-readable entry points

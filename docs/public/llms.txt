@@ -12,10 +12,16 @@ Documentation:
 - /db-test-kit-js/guide/drizzle: adopt the Drizzle implementation
 - /db-test-kit-js/guide/prisma: adopt the Prisma implementation
 - /db-test-kit-js/guide/updating: update an existing copied implementation
+- /db-test-kit-js/reference/fixtures: design, declare, load and safely use shared fixture data
+- /db-test-kit-js/reference/factories: create test-owned variation with pure builds and persisted creates
 - /db-test-kit-js/reference/caveats: transaction semantics and escape hatches
 - /db-test-kit-js/reference/safety: database isolation and destructive-operation safeguards
 - /db-test-kit-js/reference/compatibility: tested versions and support boundaries
 - /db-test-kit-js/reference/sources: official documentation, prior art and evidence boundaries
+- /db-test-kit-js/reference/lineage/: map each idea to its source and local adaptation
+- /db-test-kit-js/reference/lineage/rails: transactional tests, fixtures, identify and factory_bot
+- /db-test-kit-js/reference/lineage/frameworks: Django and Laravel parallel precedents
+- /db-test-kit-js/reference/lineage/typescript: Vitest, Fishery and transaction-focused prior art
 - /db-test-kit-js/agents/: concise instructions for coding agents
 - /db-test-kit-js/llms-full.txt: complete documentation in one text file
 

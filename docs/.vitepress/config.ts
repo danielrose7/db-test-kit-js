@@ -43,10 +43,21 @@ export default defineConfig({
       {
         text: "Reference",
         items: [
+          { text: "Fixtures", link: "/reference/fixtures" },
+          { text: "Factories", link: "/reference/factories" },
           { text: "Caveats", link: "/reference/caveats" },
           { text: "Database safety", link: "/reference/safety" },
           { text: "Compatibility", link: "/reference/compatibility" },
-          { text: "Sources and prior art", link: "/reference/sources" },
+          { text: "Source index", link: "/reference/sources" },
+        ],
+      },
+      {
+        text: "Design lineage",
+        items: [
+          { text: "What came from where", link: "/reference/lineage/" },
+          { text: "Rails ecosystem", link: "/reference/lineage/rails" },
+          { text: "Django and Laravel", link: "/reference/lineage/frameworks" },
+          { text: "TypeScript prior art", link: "/reference/lineage/typescript" },
         ],
       },
       {

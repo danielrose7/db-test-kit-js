@@ -3,6 +3,9 @@
 Last reviewed: **October 15, 2026**. Version-sensitive behavior is also pinned by executable tests;
 documentation links provide context but do not replace those tests.
 
+This page is the compact source index. [Design lineage](/reference/lineage/) explains what the kit takes
+from each ecosystem, what it changes, and what it deliberately leaves behind.
+
 ## Primary documentation
 
 - [Vitest Test API](https://vitest.dev/api/test) — `aroundEach`, scoped fixtures, concurrency and
