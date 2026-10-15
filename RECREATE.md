@@ -28,8 +28,8 @@ Stop and tell the user if any of these is false (each has a stated workaround):
    PGlite do. **Neon's HTTP driver (`drizzle-orm/neon-http`) does not**: it sends one statement per
    request. That's fine, because tests can use a local Postgres or PGlite while production keeps the
    HTTP driver; select the driver by URL in the one file that builds `db`.
-3. **Vitest >= 4.1** (`aroundEach`). On an older Vitest or on Jest, use the `beforeEach`/`afterEach`
-   variant at the bottom of this file.
+3. **Vitest >= 4.1** (`aroundEach`). Check the target's version; if it has no Vitest, install it. On an
+   older Vitest or on Jest, use the `beforeEach`/`afterEach` variant at the bottom of this file.
 4. **Queries go through one importable `db`.** If code builds its own connections in many places,
    consolidate them first (that is also what the seam guard test enforces).
 
@@ -48,8 +48,9 @@ Find and note, with file paths:
 ## Step 2: copy these files
 
 Copy from this repo into the target, keeping relative layout. Types:
-**COPY** = verbatim, **ADAPT** = copy then change the marked lines, **EXAMPLE** = replace with the
-target's own domain.
+**COPY** = verbatim, **ADAPT** = copy, then change what the "Adapt" column names (when your target's
+module paths and folders already match, that can be nothing), **EXAMPLE** = replace with the target's
+own domain. The example files only work unchanged against this repo's exact schema.
 
 | File | Type | Adapt |
 |---|---|---|
@@ -58,17 +59,22 @@ target's own domain.
 | `test/db/bootstrap.ts` | ADAPT | migrations folder; migrator import for your driver |
 | `test/db/global-setup.ts` | COPY | |
 | `test/db/seam.test.ts` | ADAPT | `ROOT`/source dir and the allowed file (your `db` module) |
-| `test/fixtures/runtime.ts` | COPY | change `NAMESPACE` to a fresh fixed UUID |
+| `test/fixtures/runtime.ts` | COPY | change `NAMESPACE` to a fresh fixed UUID (generate with `uuidgen` or `node -p 'crypto.randomUUID()'`, then commit it; never regenerate) |
 | `test/fixtures/clock.ts` | COPY | |
 | `test/fixtures/index.ts`, `test/fixtures/<table>.ts` | EXAMPLE | your tables, parents first |
 | `test/factories/*.ts` | EXAMPLE | your tables; keep the shape (persistence in `onCreate`, lazy associations) |
+| `test/fixtures.test.ts`, `test/projects.test.ts`, `test/tasks.test.ts` | EXAMPLE | the Step 4 proofs, written against this repo's schema; rewrite for yours, keeping what each one demonstrates |
+| `test/tasks.concurrency.test.ts` | EXAMPLE | the committed-mode (`useCommittedDb()`) pattern; keep it if you have any race-prone operation, skip it otherwise |
 | `test/auth/session.ts` | ADAPT | shape of your session object |
+| `tsconfig.json` | ADAPT | add `paths: { "@/*": ["./src/*"] }` and add `test`, `scripts` to `include`; keep the alias identical to the one in `vitest.config.ts` (and change `src` if your source isn't in `src/`) |
+| `package.json` | ADAPT | scripts `"test": "vitest run"` and `"test:pg": "bash scripts/test-pg.sh"`; set `"packageManager"` (CI's `pnpm/action-setup` reads it) |
+| `.gitignore` | ADAPT | make sure `node_modules` and `.env*` are ignored |
 | `vitest.config.ts` | ADAPT | merge `alias`, `setupFiles`, `globalSetup` into the existing config; do not replace it |
-| `test/harness-caveats.test.ts` | COPY | then fix table names to ones you have |
-| `scripts/test-pg.sh`, `docker-compose.yml`, `.github/workflows/test.yml` | ADAPT | names, ports, node/pnpm versions |
+| `test/harness-caveats.test.ts` | COPY | then fix the table/factory names it imports (`users`, `organizations`, `userFactory`) to ones you have |
+| `scripts/test-pg.sh`, `docker-compose.yml`, `.github/workflows/test.yml` | ADAPT | database name (`db_test_kit` appears in all three), ports, node/pnpm versions. `test-pg.sh` defaults to `postgres:postgres@localhost:5432` to match the compose file; on a machine whose local Postgres has no `postgres` role set `TEST_PG_URL` (e.g. `postgresql://localhost:5432`) |
 
-Install: `fishery`, `uuid` (and `@electric-sql/pglite` if you keep the zero-setup backend). Use the
-target's package manager; do not hand-edit lockfiles.
+Install: `vitest` (>= 4.1), `fishery`, `uuid`, and `@electric-sql/pglite` if you keep the zero-setup
+backend. Use the target's package manager; do not hand-edit lockfiles.
 
 ## Step 3: wire the seam
 
@@ -93,13 +99,16 @@ assertions), and one or two rows per table you test. Fixture dates are fixed and
 
 ## Step 5: verify (all of these, and say so in your report)
 
-- [ ] The suite passes, and **a deliberately failing test fails** (the `aroundEach` wrapper must not
-      swallow errors). Delete the temporary test afterward.
+- [ ] The suite passes, and **a deliberately failing test fails**: the temporary test must query `db`
+      and assert something false (a bare `expect(1).toBe(2)` never exercises `aroundEach`). Delete it
+      afterward.
 - [ ] The "gone in the next test" proof passes.
 - [ ] `seam.test.ts` passes, and **fails** when you temporarily add `new Pool()` elsewhere in `src`.
 - [ ] `harness-caveats.test.ts` passes (it pins aborted-transaction, savepoint and `now()` behavior).
 - [ ] Existing tests that previously passed still pass; any that needed `useCommittedDb()` are listed.
-- [ ] If CI exists, the workflow runs both the default job and (if kept) the real-Postgres job.
+- [ ] CI: locally run `pnpm install --frozen-lockfile && pnpm typecheck && pnpm test`, and confirm the
+      workflow's `TEST_DATABASE_URL` and database name match `scripts/test-pg.sh`. (You can't run the
+      workflow itself; say so.) Also run `pnpm test:pg` against a real Postgres if one is reachable.
 
 ## Pitfalls (each was hit for real)
 
