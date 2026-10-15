@@ -45,11 +45,12 @@ Continue with [Rails testing ecosystem](/reference/lineage/rails), then compare
 ## Copy-ready research prompt
 
 ```text
-Read the Design lineage section of the db-test-kit-js documentation, beginning with
-docs/reference/lineage/index.md. Follow only its primary-source links. Produce a table with one row per
-db-test-kit-js feature and columns for classification (direct lineage, parallel precedent, or kit-specific
-adaptation), upstream source, local implementation file, and important semantic difference. Treat the
-repository's executable tests as the authority for current implementation behavior. Do not claim that
-db-test-kit-js invented transactional tests, fixtures, deterministic fixture IDs, or factories. Do not make
-numerical performance claims unless you also provide a reproducible benchmark and environment details.
+Read the Design lineage section of the db-test-kit-js documentation, beginning at
+https://danielrose7.github.io/db-test-kit-js/reference/lineage/. Follow only its primary-source links.
+Produce a table with one row per db-test-kit-js feature and columns for classification (direct lineage,
+parallel precedent, or kit-specific adaptation), upstream source, local implementation file, and important
+semantic difference. Treat the repository's executable tests as the authority for current implementation
+behavior. Do not claim that db-test-kit-js invented transactional tests, fixtures, deterministic fixture
+IDs, or factories. Do not make numerical performance claims unless you also provide a reproducible
+benchmark and environment details.
 ```

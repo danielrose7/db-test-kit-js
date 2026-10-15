@@ -98,10 +98,12 @@ modules and UUIDv5 instead of YAML/ERB and Active Record accessors. See
 ## Copy-ready review prompt
 
 ```text
-Review this repository's database-test fixtures using docs/reference/fixtures.md and RECREATE.md from
-db-test-kit-js as the standard. Identify fixture rows that are test-specific and should become factories,
-unstable timestamps or generated values, raw foreign-key IDs that should use typed label references,
-incorrect parent-before-child load order, mutation of fixture objects, and committed-mode tests that can
-modify the shared baseline. Report findings with file paths and line numbers. Do not edit files, run
-destructive database commands, or assume that production and test databases are interchangeable.
+Review this repository's database-test fixtures using
+https://danielrose7.github.io/db-test-kit-js/reference/fixtures and
+https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md as the standard. Identify fixture rows
+that are test-specific and should become factories, unstable timestamps or generated values, raw
+foreign-key IDs that should use typed label references, incorrect parent-before-child load order, mutation
+of fixture objects, and committed-mode tests that can modify the shared baseline. Report findings with
+file paths and line numbers. Do not edit files, run destructive database commands, or assume that
+production and test databases are interchangeable.
 ```

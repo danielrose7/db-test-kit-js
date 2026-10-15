@@ -11,8 +11,11 @@ baseline, factories for per-test variation, and every test wrapped in a rolled-b
 
 Point your agent at this repo and tell it:
 
-> Read `RECREATE.md` in db-test-kit-js and recreate the pattern in this repository, following its
-> checklist. Report which Step 5 checks you ran.
+```text
+Read https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md completely and recreate the
+applicable database-testing pattern in this repository. Follow its checklist, preserve working pieces,
+and report exactly which Step 5 checks you ran and any checks you could not run.
+```
 
 Claude Code and other Agent Skills readers can instead copy `skill/db-test-kit/` into
 `.claude/skills/` (it is generated from `RECREATE.md`; `pnpm skill:sync`).
@@ -27,8 +30,10 @@ pnpm test:pg       # real Postgres: `docker compose up -d` first; also runs the 
 
 ## Read the guide
 
-The documentation site is built from Markdown in `docs/` and deploys as a static GitHub Pages site.
-It includes human-oriented adoption paths plus `/llms.txt`, `/llms-full.txt`, and a concise agent guide.
+The documentation site is built from Markdown in `docs/` and deploys as a static GitHub Pages site:
+https://danielrose7.github.io/db-test-kit-js/. It includes human-oriented adoption paths plus
+[llms.txt](https://danielrose7.github.io/db-test-kit-js/llms.txt),
+[llms-full.txt](https://danielrose7.github.io/db-test-kit-js/llms-full.txt), and a concise agent guide.
 
 ```bash
 pnpm docs:dev       # local authoring

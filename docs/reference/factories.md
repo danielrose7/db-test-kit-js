@@ -112,10 +112,12 @@ and associations while adding an application-specific persistence boundary in `o
 ## Copy-ready review prompt
 
 ```text
-Review this repository's database-test factories using docs/reference/factories.md and RECREATE.md from
-db-test-kit-js as the standard. Verify that build operations are pure, persistence occurs only in create
-hooks, database writes use the transaction-aware application seam, required associations are created
-lazily and can be supplied explicitly, defaults produce valid records, returned values match persisted
-values, and repeated shared identities belong in fixtures instead. Report findings with file paths and line
-numbers. Do not edit files or run destructive database commands.
+Review this repository's database-test factories using
+https://danielrose7.github.io/db-test-kit-js/reference/factories and
+https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md as the standard. Verify that build
+operations are pure, persistence occurs only in create hooks, database writes use the transaction-aware
+application seam, required associations are created lazily and can be supplied explicitly, defaults
+produce valid records, returned values match persisted values, and repeated shared identities belong in
+fixtures instead. Report findings with file paths and line numbers. Do not edit files or run destructive
+database commands.
 ```

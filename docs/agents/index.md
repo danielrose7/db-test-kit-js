@@ -12,28 +12,30 @@ included in the prompt itself; surrounding prose is context, not a hidden instru
 Give an agent this prompt:
 
 ```text
-Read RECREATE.md in db-test-kit-js completely. Recreate the applicable database-testing pattern in
-this repository. First report the existing database seam, migration path, ORM, transaction support,
-authorization boundary, test runner, and any existing harness/factories. Preserve working pieces and
-add only what is missing. Run every applicable Step 5 check, including the deliberate failing-test and
-seam-guard failure checks, and report exactly what ran.
+Read https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md completely. Recreate the
+applicable database-testing pattern in this repository. First report the existing database seam,
+migration path, ORM, transaction support, authorization boundary, test runner, and any existing
+harness/factories. Preserve working pieces and add only what is missing. Run every applicable Step 5
+check, including the deliberate failing-test and seam-guard failure checks, and report exactly what ran.
 ```
 
 ### Update a copied implementation
 
 ```text
-Read the "Updating an existing copy" section of RECREATE.md and every CHANGELOG entry newer than the
-version headers in this repository. Preserve all target-specific ADAPT changes and every EXAMPLE file.
-Apply only the reference delta, update the managed headers, and run the complete verification checklist.
-Before editing, summarize the files you expect to change. After editing, list every changed file, every
-check you ran, and any check you could not run. Do not publish a package or change production data.
+Read the "Updating an existing copy" section at
+https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md#updating-an-existing-copy and every
+newer entry in https://github.com/danielrose7/db-test-kit-js/blob/main/CHANGELOG.md than the version
+headers in this repository. Preserve all target-specific ADAPT changes and every EXAMPLE file. Apply only
+the reference delta, update the managed headers, and run the complete verification checklist. Before
+editing, summarize the files you expect to change. After editing, list every changed file, every check you
+ran, and any check you could not run. Do not publish a package or change production data.
 ```
 
 ### Ask an agent to explain the lineage
 
 ```text
-Read docs/reference/lineage/index.md, docs/reference/lineage/rails.md,
-docs/reference/lineage/frameworks.md, and docs/reference/lineage/typescript.md in db-test-kit-js.
+Read https://danielrose7.github.io/db-test-kit-js/reference/lineage/ and its Rails ecosystem, Django and
+Laravel, and TypeScript prior art child pages.
 Explain which parts of the kit are direct adaptations of established framework practices, which are
 parallel precedents, and which are kit-specific TypeScript integration work. Cite the primary source links
 from those files. Do not describe db-test-kit-js as the inventor of transactional tests, fixtures, or
@@ -42,8 +44,8 @@ factories, and do not make numerical performance claims without a reproducible b
 
 ## Machine-readable entry points
 
-- [`/llms.txt`](/llms.txt) is the short index.
-- [`/llms-full.txt`](/llms-full.txt) concatenates the documentation into one text resource.
+- [`llms.txt`](https://danielrose7.github.io/db-test-kit-js/llms.txt) is the short index.
+- [`llms-full.txt`](https://danielrose7.github.io/db-test-kit-js/llms-full.txt) concatenates the documentation into one text resource.
 - [`RECREATE.md`](https://github.com/danielrose7/db-test-kit-js/blob/main/RECREATE.md) is canonical for actions.
 - `skill/db-test-kit/SKILL.md` mirrors `RECREATE.md` for Agent Skills-compatible tools.
 
