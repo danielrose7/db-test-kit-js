@@ -22,16 +22,24 @@ make the shared baseline free per test.
 
 Stop and tell the user if any of these is false (each has a stated workaround):
 
-1. **Postgres + Drizzle.** (Prisma: the transaction hook and the fixture loader are the only
-   ORM-specific parts; see "Porting to another ORM" at the end.)
+1. **Postgres, with Drizzle or Prisma.** The files below are Drizzle. For Prisma read "Prisma variant"
+   at the end first: more than two files change, and a few Drizzle assumptions are wrong there.
 2. **Tests can use a driver with real interactive transactions.** `node-postgres`, `postgres-js` and
    PGlite do. **Neon's HTTP driver (`drizzle-orm/neon-http`) does not**: it sends one statement per
    request. That's fine, because tests can use a local Postgres or PGlite while production keeps the
    HTTP driver; select the driver by URL in the one file that builds `db`.
 3. **Vitest >= 4.1** (`aroundEach`). Check the target's version; if it has no Vitest, install it. On an
    older Vitest or on Jest, use the `beforeEach`/`afterEach` variant at the bottom of this file.
-4. **Queries go through one importable `db`.** If code builds its own connections in many places,
-   consolidate them first (that is also what the seam guard test enforces).
+4. **Queries go through one importable `db`, or through an injected one.** If code builds its own
+   connections in many places, consolidate them first (that is also what the seam guard enforces).
+   If `db` and auth are passed as parameters (dependency injection) there is nothing to mock: skip the
+   `vi.mock` seam, hand the tests' transaction client to the real functions, and pass a stub auth
+   object into the real tenancy function. The guard then forbids importing the app-wide singleton in
+   tests.
+5. **Find out what already exists before adding anything.** If the repo already has a rollback harness,
+   factories or scenarios, list them and add only the missing layers (usually fixtures, the seam guard
+   and the caveat tests). Do not rewrite working parts; if you think the reference is better in some
+   way, say so in your report instead.
 
 ## Step 1: reconnaissance (write findings down before copying)
 
@@ -44,6 +52,7 @@ Find and note, with file paths:
 - The tenancy/auth boundary: the function every server action calls first (`requireMembership`-like),
   and the **one** function it uses to learn who is signed in (`getSession`, `auth.api.getSession`, ...).
 - Where tests live and the existing runner config.
+- Prisma only: the generated client is usually gitignored, so run `prisma generate` before tests.
 
 ## Step 2: copy these files
 
@@ -88,7 +97,9 @@ backend. Use the target's package manager; do not hand-edit lockfiles.
 ## Step 4: first fixtures, first factory, first tests
 
 Keep the baseline small: one org, one owner user, one non-member user, a second org (for cross-tenant
-assertions), and one or two rows per table you test. Fixture dates are fixed and in the past; never
+assertions), and one or two rows per table you test. Fixture users are plain rows: if your auth library
+keeps credentials or accounts in separate tables they cannot actually sign in, which is fine, because
+tests use `signInAs` / a stub session instead. Fixture dates are fixed and in the past; never
 `new Date()`. Then write, in this order:
 
 1. `test/fixtures.test.ts`-style proof: baseline rows load with label-derived ids; a write in one test
@@ -122,8 +133,10 @@ assertions), and one or two rows per table you test. Fixture dates are fixed and
   test depends on parallelism. Move that test to its own file that calls `useCommittedDb()`, runs only
   on a real Postgres, and creates its own tenant. **Porting a suite to rollback can silently weaken a
   concurrency test**; scan for `Promise.all`.
-- **`now()` and `defaultNow()` are the transaction start time**, so rows in one test share
-  `created_at`. Never order assertions on it; set explicit timestamps.
+- **Database-side `now()` is the transaction start time** (Drizzle `defaultNow()`, SQL `DEFAULT now()`),
+  so rows in one test share `created_at`. Never order assertions on it; set explicit timestamps.
+  (Prisma differs: `@default(now())` is stamped client-side, so those rows get distinct times. Only raw
+  SQL `now()` and `dbgenerated("now()")` are frozen.)
 - **Cross-tenant background work sees the fixtures.** Code that scans every org (notification sweeps,
   cron-style jobs) will see baseline rows. Keep fixture dates in the past and states terminal so
   nothing is "due".
@@ -135,6 +148,18 @@ assertions), and one or two rows per table you test. Fixture dates are fixed and
   invariants). Call the real function; factories may do the same.
 - **A committed-mode test leaves data behind.** The database is throwaway per run; scope the data to a
   tenant created inside the test.
+
+- **A committed baseline breaks tests that assume an empty database.** Before loading fixtures, grep
+  for global `count()).toBe(0)`, "list everything" assertions and "refuse to run on a non-empty
+  database" guards. Scope them to the test's own tenant, or export the baseline's size / a helper to
+  remove it, and fix them in the same change. (A trial against a 480-test repo found five.)
+- **Never load the baseline into a database that something truncates.** A race/committed harness that
+  `TRUNCATE`s between tests would wipe the fixtures; keep it on a separate database with no baseline.
+- **The seam guard is repo-specific.** Its allow-list must name the app's legitimate edge files (a
+  second pool for a sandbox owner role, a migration script), and its pattern must match your ORM's
+  connection constructors.
+- **Client extensions and hooks apply to fixtures too** (Prisma `$extends` soft-delete or append-only
+  guards refuse the loader's `delete`). Load fixtures through a plain, unextended client.
 
 ## Do not
 
@@ -167,11 +192,25 @@ beforeEach(async () => {
 afterEach(async () => { release?.(); await finished; clearCurrent(); signOut(); });
 ```
 
-## Porting to another ORM
+## Prisma variant
 
-The core idea is ORM-agnostic: hold one transaction open across a test and roll it back; derive ids
-from `(table, label)`; load fixtures once. Only two places touch the ORM: the transaction hook in
-`harness.ts` (`$transaction` in Prisma, `db.transaction` in Drizzle; Prisma needs the interactive form
-and rewrites nested `$transaction` as savepoints in a proxy) and the delete/insert in `loadFixtures`.
-Keep everything else as is. (A tested Prisma variant is planned in this repo; until then, adapt those
-two places and re-run the Step 5 checklist.)
+Not yet shipped as code in this repo. These notes come from applying this file to an existing Prisma 7
+project (`@prisma/adapter-pg`) in a trial; treat the Prisma-specific claims as *observed there*, and
+re-verify them on your version.
+
+The core idea is ORM-agnostic (hold one transaction open across a test and roll it back; derive ids from
+`(table, label)`; load fixtures once), but **more than two places touch the ORM**:
+
+- **Transaction hook** (`harness.ts`): `$transaction(async (tx) => ...)` with the same sentinel throw.
+  Pass a generous `timeout` and `maxWait` (Prisma's interactive default is 5 s, shorter than a slow test).
+- **Nested transactions:** on the interactive client `tx.$transaction` exists at runtime (not in the
+  types). Observed: a failure inside it rolls back to a savepoint and the outer transaction stays usable,
+  so no proxy rewrite is needed.
+- **`runtime.ts` typing:** tables become Prisma delegates; derive row types from
+  `Prisma.TypeMap[...]["createMany"]["args"]["data"]`. Write foreign keys as scalar ids
+  (`organizationId: idOf(...)`), not `organization: { connect }`.
+- **`loadFixtures`:** `deleteMany`/`createMany` through an unextended client (see the extensions pitfall).
+- **Bootstrap:** `prisma migrate deploy` (from global setup) replaces the Drizzle migrator; no PGlite
+  backend, so no in-process default (use the docker-compose Postgres).
+- **Time:** see the `now()` pitfall; the caveat test must be rewritten, not copied.
+- **Dependency-injected apps** need no `vi.mock` at all (Step 0.4).

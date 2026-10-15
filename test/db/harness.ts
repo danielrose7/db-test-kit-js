@@ -62,6 +62,11 @@ export function useCommittedDb() {
 /** What "@/db"'s `db` is replaced with in tests. */
 export const testDb = new Proxy({} as TestDatabase, {
   get(_, prop) {
+    // Outside a test transaction a query would silently commit. Fail loudly,
+    // unless this file opted into committed mode on purpose.
+    if (!current && !committed) {
+      throw new Error("db used outside a test transaction (e.g. in beforeAll/module scope). Query inside a test, or call useCommittedDb().");
+    }
     const t = current ?? committedDb();
     const value = Reflect.get(t, prop, t);
     return typeof value === "function" ? value.bind(t) : value;

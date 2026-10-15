@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { organizations, users } from "@/schema";
 import { userFactory } from "./factories/user";
@@ -42,5 +42,23 @@ describe("rollback harness caveats", () => {
     const rows = await db.select({ createdAt: organizations.createdAt }).from(organizations).where(sql`${organizations.id} in ('caveat-a', 'caveat-b')`);
     expect(new Set(rows.map((r) => r.createdAt.getTime())).size).toBe(1);
     // So never order a test's assertions on created_at; set explicit timestamps instead.
+  });
+});
+
+// beforeAll runs outside any test transaction, where a query would silently
+// commit. The harness makes that a loud error instead (unless the file opted
+// into committed mode with useCommittedDb()).
+describe("db used outside a test transaction", () => {
+  let error: unknown;
+  beforeAll(() => {
+    try {
+      void db.select;
+    } catch (e) {
+      error = e;
+    }
+  });
+
+  it("fails loudly instead of silently committing", () => {
+    expect(String(error)).toMatch(/outside a test transaction/);
   });
 });
