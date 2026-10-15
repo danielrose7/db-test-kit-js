@@ -8,7 +8,8 @@
     "test:pg": "bash scripts/test-pg.sh",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "skill:sync": "tsx scripts/sync-skill.ts"
+    "skill:sync": "tsx scripts/sync-skill.ts",
+    "kit:stamp": "tsx scripts/stamp-version.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",

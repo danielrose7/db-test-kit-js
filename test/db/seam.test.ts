@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · ADAPT · when updating a copy, read CHANGELOG.md since this version
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";

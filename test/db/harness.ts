@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · ADAPT · when updating a copy, read CHANGELOG.md since this version
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
@@ -23,6 +24,12 @@ import * as schema from "@/schema";
 //  - now() / defaultNow() are the transaction's start time.
 //  - A failed statement aborts the whole transaction; wrap an expected failure
 //    in `db.transaction()` (a savepoint).
+//  - Outside a test transaction (e.g. a query in `beforeAll`) `db` throws instead
+//    of silently committing, unless the file called `useCommittedDb()`.
+//
+// Why `aroundEach`: it wraps the test AND its hooks, so cleanup is guaranteed.
+// A `beforeEach`/`afterEach` pair can leave stale state behind when `beforeEach`
+// fails (see the older-Vitest variant in RECREATE.md).
 
 export type TestDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 

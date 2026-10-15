@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · COPY · when updating a copy, read CHANGELOG.md since this version
 import { bootstrap } from "./bootstrap";
 import { closeTestDatabase, usingRealPostgres } from "./harness";
 

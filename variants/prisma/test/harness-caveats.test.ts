@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · COPY · when updating a copy, read CHANGELOG.md since this version
 import { beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/db";
 import { userFactory } from "./factories/user";

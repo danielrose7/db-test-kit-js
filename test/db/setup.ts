@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · ADAPT · when updating a copy, read CHANGELOG.md since this version
 import { afterAll, aroundEach, beforeAll, vi } from "vitest";
 import { signOut } from "../auth/session";
 import { bootstrap } from "./bootstrap";

@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · COPY · when updating a copy, read CHANGELOG.md since this version
 import { v5 as uuidv5 } from "uuid";
 import type { Prisma } from "@/generated/prisma/client";
 

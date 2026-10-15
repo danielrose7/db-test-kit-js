@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · COPY · when updating a copy, read CHANGELOG.md since this version
 import { inArray } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { v5 as uuidv5 } from "uuid";

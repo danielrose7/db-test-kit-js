@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · COPY · when updating a copy, read CHANGELOG.md since this version
 import { eq, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/db";

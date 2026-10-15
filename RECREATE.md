@@ -82,6 +82,9 @@ own domain. The example files only work unchanged against this repo's exact sche
 | `test/harness-caveats.test.ts` | COPY | then fix the table/factory names it imports (`users`, `organizations`, `userFactory`) to ones you have |
 | `scripts/test-pg.sh`, `docker-compose.yml`, `.github/workflows/test.yml` | ADAPT | database name (`db_test_kit` appears in all three), ports, node/pnpm versions. `test-pg.sh` defaults to `postgres:postgres@localhost:5432` to match the compose file; on a machine whose local Postgres has no `postgres` role set `TEST_PG_URL` (e.g. `postgresql://localhost:5432`) |
 
+Copied COPY/ADAPT files keep their first-line version header: it is how a later update knows what
+version the copy came from.
+
 Install: `vitest` (>= 4.1), `fishery`, `uuid`, and `@electric-sql/pglite` if you keep the zero-setup
 backend. Use the target's package manager; do not hand-edit lockfiles.
 
@@ -115,11 +118,31 @@ tests use `signInAs` / a stub session instead. Fixture dates are fixed and in th
       afterward.
 - [ ] The "gone in the next test" proof passes.
 - [ ] `seam.test.ts` passes, and **fails** when you temporarily add `new Pool()` elsewhere in `src`.
-- [ ] `harness-caveats.test.ts` passes (it pins aborted-transaction, savepoint and `now()` behavior).
+- [ ] `harness-caveats.test.ts` passes (it pins aborted-transaction, savepoint, `now()` and
+      "`db` outside a test transaction throws" behavior).
 - [ ] Existing tests that previously passed still pass; any that needed `useCommittedDb()` are listed.
 - [ ] CI: locally run `pnpm install --frozen-lockfile && pnpm typecheck && pnpm test`, and confirm the
       workflow's `TEST_DATABASE_URL` and database name match `scripts/test-pg.sh`. (You can't run the
       workflow itself; say so.) Also run `pnpm test:pg` against a real Postgres if one is reachable.
+
+## Updating an existing copy
+
+Re-syncing a repo that already has a copy is a **diff, not a recreate**: never re-run Steps 1-4 over
+working tests.
+
+1. Find the copy's version: the first line of each COPY/ADAPT file reads
+   `// db-test-kit-js v<version> · COPY|ADAPT ...`. A file with no such line predates 0.2, so treat it as
+   0.1. Compare with `VERSION` in the kit.
+2. Read `CHANGELOG.md` for every entry newer than the copy's version. Each lists the files that changed
+   and why.
+3. For each COPY file that changed: replace it with the kit's current file, then restore the version
+   header. For each ADAPT file: diff the kit's current file against the copy's *header-time* version
+   (use git history of the kit if you have it), apply the delta by hand, and keep the target's own
+   adaptations (module paths, schema import, migrations folder). Never overwrite EXAMPLE files.
+4. Update the version number on each file you touched (the kit's `pnpm kit:stamp` does this in the kit
+   itself; in the target, edit the header line to the kit's current version).
+5. Re-run the whole Step 5 checklist, including the failing-test and seam-guard-fails checks, and add any
+   new check the changelog introduced (for example 0.2: "`db` outside a test transaction throws").
 
 ## Pitfalls (each was hit for real)
 

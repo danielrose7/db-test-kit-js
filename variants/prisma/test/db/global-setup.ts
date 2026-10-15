@@ -1,3 +1,4 @@
+// db-test-kit-js v0.2 · ADAPT · when updating a copy, read CHANGELOG.md since this version
 import { execFileSync } from "node:child_process";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
