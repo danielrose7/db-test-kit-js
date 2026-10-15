@@ -1,0 +1,82 @@
+// The same tiny multi-tenant app as the Drizzle example (../../src/schema.ts).
+// Ids are plain strings so fixtures can use deterministic UUIDs and app code
+// random ones. Foreign keys are real relations; fixtures write the scalar
+// column (organizationId), never a relation `connect`.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Organization {
+  id        String    @id
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  members   Member[]
+  projects  Project[]
+  tasks     Task[]
+
+  @@map("organizations")
+}
+
+model User {
+  id      String   @id
+  name    String
+  email   String   @unique
+  members Member[]
+
+  @@map("users")
+}
+
+model Member {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  role           String       @default("member")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  user           User         @relation(fields: [userId], references: [id])
+
+  @@index([organizationId, userId])
+  @@map("members")
+}
+
+model Project {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  name           String
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  tasks          Task[]
+
+  @@map("projects")
+}
+
+model Task {
+  id             String       @id
+  organizationId String       @map("organization_id")
+  projectId      String       @map("project_id")
+  title          String
+  claimedBy      String?      @map("claimed_by")
+  claimedAt      DateTime?    @map("claimed_at") @db.Timestamptz
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  project        Project      @relation(fields: [projectId], references: [id])
+
+  @@map("tasks")
+}
+
+model AuditLog {
+  id             String   @id
+  organizationId String   @map("organization_id")
+  actorUserId    String   @map("actor_user_id")
+  action         String
+  resourceType   String   @map("resource_type")
+  resourceId     String   @map("resource_id")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("audit_logs")
+}

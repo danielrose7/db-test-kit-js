@@ -25,6 +25,11 @@ pnpm test          # PGlite (in-process Postgres): nothing else to install
 pnpm test:pg       # real Postgres: `docker compose up -d` first; also runs the concurrency tests
 ```
 
+## Prisma?
+
+`variants/prisma/` is the same project on Prisma 7 (real Postgres required): same domain, same tests, same
+checklist. `cd variants/prisma && pnpm install && pnpm test`.
+
 ## What's in it
 
 ```

@@ -194,23 +194,27 @@ afterEach(async () => { release?.(); await finished; clearCurrent(); signOut(); 
 
 ## Prisma variant
 
-Not yet shipped as code in this repo. These notes come from applying this file to an existing Prisma 7
-project (`@prisma/adapter-pg`) in a trial; treat the Prisma-specific claims as *observed there*, and
-re-verify them on your version.
+A complete, tested Prisma 7 project lives in `variants/prisma/` (same domain, same test names, same
+checklist; run with `pnpm test` there against a real Postgres). Copy from it instead of adapting the
+Drizzle files. What differs from the Drizzle files, all verified by tests in that project:
 
-The core idea is ORM-agnostic (hold one transaction open across a test and roll it back; derive ids from
-`(table, label)`; load fixtures once), but **more than two places touch the ORM**:
-
-- **Transaction hook** (`harness.ts`): `$transaction(async (tx) => ...)` with the same sentinel throw.
-  Pass a generous `timeout` and `maxWait` (Prisma's interactive default is 5 s, shorter than a slow test).
-- **Nested transactions:** on the interactive client `tx.$transaction` exists at runtime (not in the
-  types). Observed: a failure inside it rolls back to a savepoint and the outer transaction stays usable,
-  so no proxy rewrite is needed.
-- **`runtime.ts` typing:** tables become Prisma delegates; derive row types from
-  `Prisma.TypeMap[...]["createMany"]["args"]["data"]`. Write foreign keys as scalar ids
-  (`organizationId: idOf(...)`), not `organization: { connect }`.
-- **`loadFixtures`:** `deleteMany`/`createMany` through an unextended client (see the extensions pitfall).
-- **Bootstrap:** `prisma migrate deploy` (from global setup) replaces the Drizzle migrator; no PGlite
-  backend, so no in-process default (use the docker-compose Postgres).
-- **Time:** see the `now()` pitfall; the caveat test must be rewritten, not copied.
-- **Dependency-injected apps** need no `vi.mock` at all (Step 0.4).
+- **Transaction hook** (`test/db/harness.ts`): `$transaction(async (tx) => ...)` with the same sentinel
+  throw, and an explicit generous `timeout`/`maxWait` (Prisma's interactive default is 5 s).
+- **Nested transactions:** `tx.$transaction` exists at runtime on the interactive client (not in the
+  types). A failure inside it rolls back to a savepoint and the outer transaction stays usable, so no
+  proxy rewrite is needed (`harness-caveats.test.ts`).
+- **`now()`:** Prisma's `@default(now())` is stamped client-side, so rows in one test get distinct
+  `created_at`; only raw SQL `now()` is frozen at transaction start. The caveat tests assert both.
+- **`runtime.ts`:** tables become Prisma delegate names (`fixtures("user", "users", {...})`); row types
+  come from `Prisma.TypeMap[...]["createMany"]["args"]["data"]`. Write foreign keys as scalar ids
+  (`organizationId: idOf(...)`), never `organization: { connect }`.
+- **Loader:** `deleteMany`/`createMany` through a plain client (see the extensions pitfall), run from
+  `global-setup.ts` after `prisma migrate deploy`.
+- **Backend:** no PGlite option; a real Postgres is required. Prisma's engines do not infer the OS user
+  the way libpq does, so a local server whose role isn't `postgres` needs it in the URL
+  (`TEST_PG_URL=postgresql://<you>@localhost:5432`).
+- **Pin the toolchain.** `prisma`, `@prisma/client` and `@prisma/adapter-pg` must be the same version;
+  an unpinned install can resolve the CLI to a newer release candidate whose commands differ from the
+  client's.
+- **Generated client:** run `prisma generate` before tests (gitignored); the variant's `pnpm test` does.
+- **Dependency-injected apps** need no `vi.mock` at all (Step 0.4); homework-api is that shape.
