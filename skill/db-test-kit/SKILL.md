@@ -137,22 +137,26 @@ tests use `signInAs` / a stub session instead. Fixture dates are fixed and in th
 ## Updating an existing copy
 
 Re-syncing a repo that already has a copy is a **diff, not a recreate**: never re-run Steps 1-4 over
-working tests.
+working tests. (A cold-agent trial of this procedure on a v0.1 copy succeeded; its wording fixes are
+folded in below.)
 
 1. Find the copy's version: the first line of each COPY/ADAPT file reads
    `// db-test-kit-js v<version> · COPY|ADAPT ...`. A file with no such line predates 0.2, so treat it as
    0.1. Compare with `VERSION` in the kit.
-2. Read `CHANGELOG.md` for every entry newer than the copy's version. Each lists the files that changed
-   and why.
-3. For each COPY file that changed: replace it with the kit's current file, then restore the version
-   header. For each ADAPT file: diff the kit's current file against the copy's *header-time* version
-   (use git history of the kit if you have it), apply the delta by hand, and keep the target's own
-   adaptations (module paths, schema import, migrations folder). Never overwrite EXAMPLE files.
-4. Update the version number on each file you touched (the kit's `pnpm kit:stamp` does this in the kit
-   itself; in the target, edit the header line to the kit's current version). When updating a
-   headerless 0.1 copy to 0.2 or later, add the current header to **every existing COPY/ADAPT file**
-   listed in Step 2, including files whose bodies did not change. Use the matching source file's
-   header as the exact template. Do not stamp EXAMPLE files.
+2. Read `CHANGELOG.md` for every entry newer than the copy's version. Each entry has a table of the
+   files that changed, with their type (COPY / ADAPT / EXAMPLE), and says why.
+3. For each file in those entries:
+   - **COPY:** copy the kit's current file as-is; it already carries the current header. Exceptions
+     that hold your own values: in `test/fixtures/runtime.ts` restore your `NAMESPACE`; in
+     `test/harness-caveats.test.ts` re-apply the table/factory name fixes you made at install.
+   - **ADAPT:** diff the kit's current file against *your copy* (if you also have the kit's git history,
+     diff against the version in your header instead). Differences that the changelog entry does not
+     describe are **your adaptations: keep them**; apply only the described delta by hand.
+   - **EXAMPLE:** never overwrite. Add any new example the entry says is required.
+4. **Every COPY/ADAPT file gets the current header, including files with no other change.** A copy
+   with no headers (0.1) must have the header added to all of them, so the next update can tell its
+   version. The exact line to prepend or replace (from the kit's files):
+   `// db-test-kit-js v<VERSION> · COPY|ADAPT · when updating a copy, read CHANGELOG.md since this version`
 5. Re-run the whole Step 5 checklist, including the failing-test and seam-guard-fails checks, and add any
    new check the changelog introduced (for example 0.2: "`db` outside a test transaction throws").
 
