@@ -1,0 +1,68 @@
+# db-test-kit-js
+
+**A repo to copy from, not a dependency.** Patterns for database-backed integration tests in
+TypeScript (Drizzle + Postgres), the way Rails, Django and Laravel do them: a fast committed fixture
+baseline, factories for per-test variation, and every test wrapped in a rolled-back transaction.
+
+> A little copy is better than a little dependency. There is no package to install. Take the files,
+> own them, change them.
+
+## Use it with an AI agent
+
+Point your agent at this repo and tell it:
+
+> Read `RECREATE.md` in db-test-kit-js and recreate the pattern in this repository, following its
+> checklist. Report which Step 5 checks you ran.
+
+Claude Code and other Agent Skills readers can instead copy `skill/db-test-kit/` into
+`.claude/skills/` (it is generated from `RECREATE.md`; `pnpm skill:sync`).
+
+## Run it
+
+```bash
+pnpm install
+pnpm test          # PGlite (in-process Postgres): nothing else to install
+pnpm test:pg       # real Postgres: `docker compose up -d` first; also runs the concurrency tests
+```
+
+## What's in it
+
+```
+src/                      a tiny multi-tenant app: orgs, members, projects, tasks, audit log
+  db.ts                   THE SEAM: the one `db` every query uses
+  membership.ts           requireMembership: the tenant boundary (never mocked)
+  projects.ts, tasks.ts   server functions under test (claimTask is race-prone on purpose)
+test/db/                  COPY: the rollback harness, vitest setup, bootstrap, seam guard
+test/fixtures/            COPY runtime.ts; EXAMPLE rows (one file per table, parents first)
+test/factories/           EXAMPLE fishery factories with lazy associations
+test/auth/session.ts      signInAs(user): fakes only the session lookup
+test/*.test.ts            fixtures+rollback proof, tenancy matrix, caveats, concurrency
+RECREATE.md               the instructions an agent follows (canonical)
+```
+
+## The three layers
+
+1. **Rollback per test** (`test/db/harness.ts`). `aroundEach` opens a transaction, runs the test,
+   then throws a sentinel so Postgres rolls back (a callback that returns normally would commit).
+   The app's `db` import is mocked to a proxy onto that transaction; app-level `db.transaction()`
+   becomes a savepoint. ~0.3 ms per test vs ~58 ms to `TRUNCATE` every table.
+2. **Fixtures** (`test/fixtures/`). Rails-style: rows keyed by label, ids derived from
+   `(table, label)`, foreign keys written `idOf(userFixtures, "olivia")` so a bad label fails
+   `tsc`. Loaded once, read-only, fixed past dates.
+3. **Factories** (`test/factories/`). fishery, persistence in `onCreate`, associations created
+   lazily so `memberFactory.create()` alone yields a valid tenant.
+
+Auth is faked at one point (`getSession`); the membership check runs for real, so tenant isolation is
+genuinely tested.
+
+## Honest caveats
+
+One wrapping transaction means one connection: concurrent queries serialize, `now()` is the
+transaction start, and a failed statement aborts the transaction. Each is pinned by
+`test/harness-caveats.test.ts`, and races go in a `useCommittedDb()` file that needs a real Postgres
+(see `test/tasks.concurrency.test.ts`). Details and the escape hatches are in `RECREATE.md`.
+
+## CI
+
+`.github/workflows/test.yml` runs two jobs: PGlite (fast, no services) and a real Postgres service
+container (same suite plus the concurrency tests).
