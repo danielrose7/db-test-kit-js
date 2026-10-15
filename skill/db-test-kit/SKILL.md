@@ -129,9 +129,10 @@ tests use `signInAs` / a stub session instead. Fixture dates are fixed and in th
 - [ ] `harness-caveats.test.ts` passes (it pins aborted-transaction, savepoint, `now()` and
       "`db` outside a test transaction throws" behavior).
 - [ ] Existing tests that previously passed still pass; any that needed `useCommittedDb()` are listed.
-- [ ] CI: locally run `pnpm install --frozen-lockfile && pnpm typecheck && pnpm test`, and confirm the
-      workflow's `TEST_DATABASE_URL` and database name match `scripts/test-pg.sh`. (You can't run the
-      workflow itself; say so.) Also run `pnpm test:pg` against a real Postgres if one is reachable.
+- [ ] CI: locally run `pnpm install --frozen-lockfile`, the target repo's typecheck command (for
+      example `pnpm typecheck` or `pnpm exec tsc --noEmit`), and `pnpm test`; confirm the workflow's
+      `TEST_DATABASE_URL` and database name match `scripts/test-pg.sh`. (You can't run the workflow
+      itself; say so.) Also run `pnpm test:pg` against a real Postgres if one is reachable.
 
 ## Updating an existing copy
 
@@ -148,7 +149,10 @@ working tests.
    (use git history of the kit if you have it), apply the delta by hand, and keep the target's own
    adaptations (module paths, schema import, migrations folder). Never overwrite EXAMPLE files.
 4. Update the version number on each file you touched (the kit's `pnpm kit:stamp` does this in the kit
-   itself; in the target, edit the header line to the kit's current version).
+   itself; in the target, edit the header line to the kit's current version). When updating a
+   headerless 0.1 copy to 0.2 or later, add the current header to **every existing COPY/ADAPT file**
+   listed in Step 2, including files whose bodies did not change. Use the matching source file's
+   header as the exact template. Do not stamp EXAMPLE files.
 5. Re-run the whole Step 5 checklist, including the failing-test and seam-guard-fails checks, and add any
    new check the changelog introduced (for example 0.2: "`db` outside a test transaction throws").
 

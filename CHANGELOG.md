@@ -11,6 +11,8 @@ repo carries the version it was taken from, so updating it means reading the ent
   `test/harness-caveats.test.ts` pins it.
 - Prisma variant added (`variants/prisma/`).
 - Files get a version header.
+- Updating a headerless 0.1 copy requires adding the 0.2 header to every existing COPY/ADAPT file,
+  including files whose bodies did not otherwise change; see `RECREATE.md`.
 
 ## 0.1 (2026-10-15)
 - Initial core: rollback harness (`aroundEach` + sentinel throw), fixtures runtime (`identify`, `idOf`,
