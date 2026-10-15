@@ -69,5 +69,7 @@ transaction start, and a failed statement aborts the transaction. Each is pinned
 
 ## CI
 
+> Status: the workflow is validated as YAML and every command it runs is exercised locally, but it has not run on GitHub yet. Watch the first push.
+
 `.github/workflows/test.yml` runs two jobs: PGlite (fast, no services) and a real Postgres service
 container (same suite plus the concurrency tests).
