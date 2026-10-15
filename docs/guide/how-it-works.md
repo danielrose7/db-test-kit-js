@@ -4,7 +4,8 @@ The kit combines three familiar testing tools and one application seam. None is 
 composition is the useful part.
 
 For the longer history—including the Rails APIs that directly inspired the fixture model—see
-[Design lineage](/reference/lineage/).
+[Design lineage](/reference/lineage/). To begin from working tests instead, browse the
+[example walkthroughs](/examples/).
 
 ## 1. Rollback isolation
 

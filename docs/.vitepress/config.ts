@@ -7,6 +7,10 @@ export default defineConfig({
   base: "/db-test-kit-js/",
   cleanUrls: true,
   lastUpdated: true,
+  markdown: {
+    lineNumbers: true,
+    theme: { light: "github-light", dark: "github-dark" },
+  },
   head: [
     ["meta", { name: "theme-color", content: "#111815" }],
     ["meta", { property: "og:type", content: "website" }],
@@ -18,6 +22,7 @@ export default defineConfig({
     siteTitle: "db-test-kit-js",
     nav: [
       { text: "Guide", link: "/guide/quick-start" },
+      { text: "Examples", link: "/examples/" },
       { text: "Reference", link: "/reference/caveats" },
       { text: "For agents", link: "/agents/" },
       { text: "v0.2", link: "https://github.com/danielrose7/db-test-kit-js/blob/main/CHANGELOG.md" },
@@ -38,6 +43,16 @@ export default defineConfig({
           { text: "Drizzle", link: "/guide/drizzle" },
           { text: "Prisma", link: "/guide/prisma" },
           { text: "Update a copy", link: "/guide/updating" },
+        ],
+      },
+      {
+        text: "Examples",
+        items: [
+          { text: "Overview", link: "/examples/" },
+          { text: "Rollback test", link: "/examples/rollback-test" },
+          { text: "Fixtures + factories", link: "/examples/fixtures-factories" },
+          { text: "Authorization", link: "/examples/authorization" },
+          { text: "Real concurrency", link: "/examples/concurrency" },
         ],
       },
       {

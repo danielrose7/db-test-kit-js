@@ -12,6 +12,11 @@ Documentation:
 - https://danielrose7.github.io/db-test-kit-js/guide/drizzle: adopt the Drizzle implementation
 - https://danielrose7.github.io/db-test-kit-js/guide/prisma: adopt the Prisma implementation
 - https://danielrose7.github.io/db-test-kit-js/guide/updating: update an existing copied implementation
+- https://danielrose7.github.io/db-test-kit-js/examples/: browse behavior-led examples with source links
+- https://danielrose7.github.io/db-test-kit-js/examples/rollback-test: see rollback isolation from a test's point of view
+- https://danielrose7.github.io/db-test-kit-js/examples/fixtures-factories: combine shared fixtures with test-owned records
+- https://danielrose7.github.io/db-test-kit-js/examples/authorization: exercise real tenant authorization
+- https://danielrose7.github.io/db-test-kit-js/examples/concurrency: move race tests into explicit committed mode
 - https://danielrose7.github.io/db-test-kit-js/reference/fixtures: design, declare, load and safely use shared fixture data
 - https://danielrose7.github.io/db-test-kit-js/reference/factories: create test-owned variation with pure builds and persisted creates
 - https://danielrose7.github.io/db-test-kit-js/reference/caveats: transaction semantics and escape hatches

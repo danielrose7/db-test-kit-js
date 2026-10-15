@@ -12,6 +12,9 @@ hero:
     - theme: alt
       text: See how it works
       link: /guide/how-it-works
+    - theme: alt
+      text: Browse examples
+      link: /examples/
 ---
 
 <TransactionSketch />
