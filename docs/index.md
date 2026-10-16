@@ -44,6 +44,15 @@ boundary, and test runner. Those seams should stay visible.
   <p><strong>One transaction owns one connection.</strong> That makes isolation cheap. It also means concurrency is fake, database <code>now()</code> is frozen, and an expected SQL error can abort the transaction. The kit pins those facts with tests and gives race-sensitive work an explicit committed-mode exit.</p>
 </div>
 
+<p class="home-kicker">Where it fits</p>
+
+## Between a unit test and a full e2e.
+
+These are endpoint tests: a real server function or route handler, a real schema and a real authorization
+decision, run in-process in milliseconds. They catch what mocks cannot (a missing tenant filter, a
+constraint violation, a forgotten audit write) without the browser, server and teardown cost of end-to-end
+tests. <a href="./guide/endpoint-testing">See where the line falls →</a>
+
 <p class="home-kicker">Choose your route</p>
 
 ## Same design. Two working implementations.

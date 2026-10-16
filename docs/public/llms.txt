@@ -8,6 +8,7 @@ Canonical operational instructions:
 Documentation:
 - https://danielrose7.github.io/db-test-kit-js/guide/quick-start: run the reference projects
 - https://danielrose7.github.io/db-test-kit-js/guide/how-it-works: rollback, fixtures, factories and the application seam
+- https://danielrose7.github.io/db-test-kit-js/guide/endpoint-testing: where the kit sits between unit tests and full e2e, and where it stops
 - https://danielrose7.github.io/db-test-kit-js/guide/choose-a-path: select Drizzle or Prisma and singleton or dependency injection
 - https://danielrose7.github.io/db-test-kit-js/guide/drizzle: adopt the Drizzle implementation
 - https://danielrose7.github.io/db-test-kit-js/guide/prisma: adopt the Prisma implementation

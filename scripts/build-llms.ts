@@ -6,6 +6,7 @@ const pages = [
   ["Home", "docs/index.md"],
   ["Quick start", "docs/guide/quick-start.md"],
   ["How it works", "docs/guide/how-it-works.md"],
+  ["Where this fits: endpoint tests", "docs/guide/endpoint-testing.md"],
   ["Choose an adoption path", "docs/guide/choose-a-path.md"],
   ["Adopt the Drizzle version", "docs/guide/drizzle.md"],
   ["Adopt the Prisma version", "docs/guide/prisma.md"],

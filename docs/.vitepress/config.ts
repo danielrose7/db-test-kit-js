@@ -34,6 +34,7 @@ export default defineConfig({
           { text: "Why this kit", link: "/" },
           { text: "Quick start", link: "/guide/quick-start" },
           { text: "How it works", link: "/guide/how-it-works" },
+          { text: "Endpoint tests", link: "/guide/endpoint-testing" },
           { text: "Choose a path", link: "/guide/choose-a-path" },
         ],
       },

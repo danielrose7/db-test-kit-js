@@ -10,6 +10,8 @@ excerpt from both implementations when the ORM changes the expression of the pat
 | Authorization + tenancy | Fake identity; keep the database authorization decision real | [Read the example](/examples/authorization) |
 | Real concurrency | Leave the wrapper transaction when separate connections are the behavior | [Read the example](/examples/concurrency) |
 
+These examples call endpoints in-process; see [where that sits between unit and e2e tests](/guide/endpoint-testing).
+
 ## The recurring shape
 
 ```ts
